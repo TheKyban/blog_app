@@ -1,13 +1,16 @@
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import User, { USER } from "./models/User";
+import { ROLE } from "./generated/prisma";
+import { Prisma } from "@/prisma/prisma";
+
+export const runtime = "nodejs"; // Not edge
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export interface AuthUser {
   id: string;
   username: string;
-  role: USER;
+  role: ROLE;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -26,7 +29,11 @@ export async function authenticate(
   password: string
 ): Promise<AuthUser | null> {
   // const user = ADMIN_USERS.find((u) => u.username === username);
-  const user = await User.findOne({ username: username }).exec();
+  const user = await Prisma.user.findFirst({
+    where: {
+      username,
+    },
+  });
 
   if (!user) {
     return null;
@@ -64,7 +71,7 @@ export async function verifyToken(token: string): Promise<AuthUser | null> {
     return {
       id: payload.sub as string,
       username: payload.username as string,
-      role: payload.role as USER,
+      role: payload.role as ROLE,
     };
   } catch (error) {
     return null;

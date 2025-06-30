@@ -1,76 +1,59 @@
-import DOMPurify from 'isomorphic-dompurify';
-
-// Configuration for DOMPurify to allow safe HTML elements
-const ALLOWED_TAGS = [
-  'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-  'ul', 'ol', 'li', 'blockquote', 'a', 'img', 'code', 'pre', 'span', 'div',
-  'table', 'thead', 'tbody', 'tr', 'th', 'td'
-];
-
-const ALLOWED_ATTRIBUTES = {
-  'a': ['href', 'title', 'target', 'rel'],
-  'img': ['src', 'alt', 'title', 'width', 'height'],
-  'blockquote': ['cite'],
-  '*': ['class', 'style'] // Allow class and style on all elements for formatting
-};
-
-export function sanitizeHtml(html: string): string {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: ALLOWED_ATTRIBUTES,
-    ALLOW_DATA_ATTR: false,
-    FORBID_SCRIPT: true,
-    FORBID_TAGS: ['script', 'object', 'embed', 'form', 'input', 'button'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur'],
-  });
-}
-
-export function extractTextFromHtml(html: string, maxLength: number = 160): string {
+export function extractTextFromHtml(
+  html: string,
+  maxLength: number = 160
+): string {
   // Remove HTML tags and get plain text
-  const plainText = html.replace(/<[^>]*>/g, '');
-  
+  const plainText = html.replace(/<[^>]*>/g, "");
+
   // Decode HTML entities
   const decoded = plainText
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
-  
+    .replace(/&nbsp;/g, " ");
+
   // Trim and limit length
   return decoded.trim().substring(0, maxLength);
 }
 
-export function validatePostData(data: any): { isValid: boolean; errors: string[] } {
+export function validatePostData(data: any): {
+  isValid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
-  if (!data.title || typeof data.title !== 'string') {
-    errors.push('Title is required and must be a string');
+  if (!data.title || typeof data.title !== "string") {
+    errors.push("Title is required and must be a string");
   } else if (data.title.trim().length < 1) {
-    errors.push('Title cannot be empty');
+    errors.push("Title cannot be empty");
   } else if (data.title.length > 200) {
-    errors.push('Title must be less than 200 characters');
+    errors.push("Title must be less than 200 characters");
   }
 
-  if (!data.content || typeof data.content !== 'string') {
-    errors.push('Content is required and must be a string');
+  if (!data.content || typeof data.content !== "string") {
+    errors.push("Content is required and must be a string");
   } else if (data.content.trim().length < 1) {
-    errors.push('Content cannot be empty');
+    errors.push("Content cannot be empty");
   } else if (data.content.length > 50000) {
-    errors.push('Content must be less than 50,000 characters');
+    errors.push("Content must be less than 50,000 characters");
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 // Rate limiting helper (simple in-memory implementation)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-export function checkRateLimit(identifier: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
+export function checkRateLimit(
+  identifier: string,
+  maxRequests: number = 10,
+  windowMs: number = 60000
+): boolean {
   const now = Date.now();
   const windowStart = now - windowMs;
 

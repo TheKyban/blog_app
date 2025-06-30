@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectToDatabase from "@/lib/mongodb";
-import Post from "@/lib/models/Post";
 import { generateUniqueSlug } from "@/lib/utils/slug";
-import { sanitizeHtml, validatePostData, checkRateLimit } from "@/lib/security";
 import { verifyToken, getTokenFromRequest } from "@/lib/auth";
+import { Prisma } from "@/prisma/prisma";
 
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
-    const clientIP = request.headers.get("x-forwarded-for") || "unknown";
-    if (!checkRateLimit(`create-post:${clientIP}`, 10, 600000)) {
-      // 10 posts per 10 minutes
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        { status: 429 }
-      );
-    }
+    // const clientIP = request.headers.get("x-forwarded-for") || "unknown";
+    // if (!checkRateLimit(`create-post:${clientIP}`, 10, 600000)) {
+    //   // 10 posts per 10 minutes
+    //   return NextResponse.json(
+    //     { error: "Rate limit exceeded. Please try again later." },
+    //     { status: 429 }
+    //   );
+    // }
 
     // Authentication check
     const token =
@@ -30,14 +28,12 @@ export async function POST(request: NextRequest) {
 
     const user = await verifyToken(token);
 
-    if (!user || user.role !== "admin") {
+    if (!user || user.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Admin access required" },
         { status: 403 }
       );
     }
-
-    await connectToDatabase();
 
     const requestData = await request.json();
     // // Validate input data
@@ -53,28 +49,29 @@ export async function POST(request: NextRequest) {
     const { title, content } = requestData;
 
     // Sanitize HTML content
-    const sanitizedContent = sanitizeHtml(content);
 
     // Get existing slugs to ensure uniqueness
-    const existingPosts = await Post.find({}, "slug");
+    const existingPosts = await Prisma.post.findMany({
+      select: { slug: true },
+    });
     const existingSlugs = existingPosts.map((post) => post.slug);
 
     // Generate unique slug
     const slug = generateUniqueSlug(title, existingSlugs);
 
     // Create new post
-    const post = new Post({
-      title: title.trim(),
-      content: sanitizedContent,
-      slug,
+    const post = await Prisma.post.create({
+      data: {
+        title: title.trim(),
+        content: content,
+        slug,
+      },
     });
-
-    await post.save();
 
     return NextResponse.json({
       success: true,
       post: {
-        _id: post._id,
+        _id: post.id,
         title: post.title,
         content: post.content,
         slug: post.slug,

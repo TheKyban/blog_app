@@ -23,8 +23,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(username, password);
-
     const user = await authenticate(username, password);
 
     if (!user) {
