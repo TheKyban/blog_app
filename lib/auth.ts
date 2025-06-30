@@ -1,0 +1,82 @@
+import { SignJWT, jwtVerify } from "jose";
+import bcrypt from "bcryptjs";
+import User, { USER } from "./models/User";
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  role: USER;
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
+}
+
+export async function verifyPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
+}
+
+export async function authenticate(
+  username: string,
+  password: string
+): Promise<AuthUser | null> {
+  // const user = ADMIN_USERS.find((u) => u.username === username);
+  const user = await User.findOne({ username: username }).exec();
+
+  if (!user) {
+    return null;
+  }
+
+  const isValid = await verifyPassword(password, user.password);
+
+  if (!isValid) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+  };
+}
+
+export async function createToken(user: AuthUser): Promise<string> {
+  return new SignJWT({
+    sub: user.id,
+    username: user.username,
+    role: user.role,
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("24h")
+    .sign(JWT_SECRET);
+}
+
+export async function verifyToken(token: string): Promise<AuthUser | null> {
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    return {
+      id: payload.sub as string,
+      username: payload.username as string,
+      role: payload.role as USER,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+export function getTokenFromRequest(request: Request): string | null {
+  const authHeader = request.headers.get("authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return authHeader.substring(7);
+}
