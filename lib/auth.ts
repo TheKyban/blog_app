@@ -1,5 +1,4 @@
 import { SignJWT, jwtVerify } from "jose";
-import bcrypt from "bcryptjs";
 import { ROLE } from "./generated/prisma";
 import { Prisma } from "@/prisma/prisma";
 
@@ -9,17 +8,6 @@ export interface AuthUser {
   id: string;
   username: string;
   role: ROLE;
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
-
-export async function verifyPassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
 }
 
 export async function authenticate(
@@ -37,9 +25,7 @@ export async function authenticate(
     return null;
   }
 
-  const isValid = await verifyPassword(password, user.password);
-
-  if (!isValid) {
+  if (password !== user.password) {
     return null;
   }
 
