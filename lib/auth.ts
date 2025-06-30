@@ -3,8 +3,6 @@ import bcrypt from "bcryptjs";
 import { ROLE } from "./generated/prisma";
 import { Prisma } from "@/prisma/prisma";
 
-export const runtime = "nodejs"; // Not edge
-
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export interface AuthUser {
