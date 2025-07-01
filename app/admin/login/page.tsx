@@ -27,7 +27,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
+    if (!username || !password) return;
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",

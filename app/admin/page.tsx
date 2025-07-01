@@ -1,11 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FileText, Plus, Eye, TrendingUp } from 'lucide-react';
-import { format } from 'date-fns';
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FileText, Plus, Eye, TrendingUp } from "lucide-react";
+import { format } from "date-fns";
 
 interface Post {
   _id: string;
@@ -25,13 +31,18 @@ export default function AdminDashboard() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const response = await fetch("/api/posts", {
+        cache: "no-store",
+        next: {
+          revalidate: 0,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setPosts(data.posts);
       }
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error("Error fetching posts:", error);
     } finally {
       setLoading(false);
     }
@@ -43,11 +54,14 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-slate-600 mt-2">Manage your blog posts and content.</p>
+        <p className="text-slate-600 mt-2">
+          Manage your blog posts and content.
+        </p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total Posts */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
@@ -55,32 +69,34 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{posts.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Published articles
-            </p>
+            <p className="text-xs text-muted-foreground">Published articles</p>
           </CardContent>
         </Card>
 
+        {/* Recent Activity */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Recent Activity
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {posts.filter(post => {
-                const postDate = new Date(post.createdAt);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return postDate > weekAgo;
-              }).length}
+              {
+                posts.filter((post) => {
+                  const postDate = new Date(post.createdAt);
+                  const weekAgo = new Date();
+                  weekAgo.setDate(weekAgo.getDate() - 7);
+                  return postDate > weekAgo;
+                }).length
+              }
             </div>
-            <p className="text-xs text-muted-foreground">
-              Posts this week
-            </p>
+            <p className="text-xs text-muted-foreground">Posts this week</p>
           </CardContent>
         </Card>
 
+        {/* Quick Actions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
@@ -101,9 +117,7 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Posts</CardTitle>
-          <CardDescription>
-            Your latest blog posts
-          </CardDescription>
+          <CardDescription>Your latest blog posts</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -118,11 +132,14 @@ export default function AdminDashboard() {
           ) : recentPosts.length > 0 ? (
             <div className="space-y-4">
               {recentPosts.map((post) => (
-                <div key={post._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                <div
+                  key={post._id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors"
+                >
                   <div className="flex-1">
                     <h3 className="font-medium text-slate-900">{post.title}</h3>
                     <p className="text-sm text-slate-500">
-                      Created {format(new Date(post.createdAt), 'MMM d, yyyy')}
+                      Created {format(new Date(post.createdAt), "MMM d, yyyy")}
                     </p>
                   </div>
                   <div className="flex space-x-2">
@@ -144,8 +161,12 @@ export default function AdminDashboard() {
           ) : (
             <div className="text-center py-8">
               <FileText className="mx-auto h-12 w-12 text-slate-400" />
-              <h3 className="mt-2 text-sm font-medium text-slate-900">No posts yet</h3>
-              <p className="mt-1 text-sm text-slate-500">Get started by creating your first blog post.</p>
+              <h3 className="mt-2 text-sm font-medium text-slate-900">
+                No posts yet
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Get started by creating your first blog post.
+              </p>
               <div className="mt-6">
                 <Link href="/admin/posts/create">
                   <Button>
@@ -156,7 +177,7 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
-          
+
           {recentPosts.length > 0 && (
             <div className="mt-6 text-center">
               <Link href="/admin/posts">

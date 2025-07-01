@@ -7,7 +7,6 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin")) {
     // Skip auth check for login page
     if (request.nextUrl.pathname === "/admin/login") {
-      console.log("not redirect to admin");
       return NextResponse.next();
     }
 

@@ -80,8 +80,6 @@ export async function PUT(
 
     const { title, content } = requestData;
 
-    // Sanitize HTML content
-
     const existingPost = await Prisma.post.findUnique({
       where: { slug: params.slug },
     });

@@ -1,7 +1,8 @@
 import { Prisma } from "@/prisma/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export const dynamic = "force-dynamic";
+export async function GET() {
   try {
     const posts = await Prisma.post.findMany({
       orderBy: {
@@ -21,10 +22,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Cache for 2 minutes
-    response.headers.set(
-      "Cache-Control",
-      "public, s-maxage=120, stale-while-revalidate=300"
-    );
+    // response.headers.set(
+    //   "Cache-Control",
+    //   "public, s-maxage=120, stale-while-revalidate=300"
+    // );
 
     return response;
   } catch (error) {
